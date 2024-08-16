@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+    <head>
+        <title>gunfp: Decentralized "Facility Planning" Software</title>
+
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/gun/gun.js" type="text/javascript" charset="utf-8"></script>
+        <link href='https://fonts.googleapis.com/css?family=Alegreya+Sans:300italic' rel='stylesheet' type='text/css'>
+
+        <style>
+            body,
+            html {
+                max-width: 100vw;
+                /* font-family: 'Alegreya Sans', sans-serif; */
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="app">
+            <div>
+                <div>
+                    <h1>Gun Based Collaborative ARC Generation Website</h1>
+                </div>
+                <div>
+                    <input 
+                        type="text"
+                        v-model="gunfpId"
+                    >
+                </div>
+                <div>
+                    {{ gunfp }}
+                </div>
+                <div>
+                    <button @click="updateGunfpActivities()">Populate Data</button>
+                </div>
+            </div>
+        </div>
+    </body>
+
+    <script>
+        localStorage.clear();
+
+        var gun = new Gun(['https://gun-manhattan.herokuapp.com/gun']);
+        var db = gun.get('wira-pratama-gunfps');
+
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    gunfpId: false,
+                    gunfp: false
+                };
+            },
+            methods: {
+                generateGunfpId: function () {
+                    return 'id-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+                },
+                updateGunfpActivities: function () {
+                    const gunfp = db.get(this.gunfpId);
+                    var newGunfp = gunfp.put(
+                        {
+                            "activity 1" : {
+                                "activity 2": 3,
+                                "activity 3": 4
+                            },
+                            "activity 2" : {
+                                "activity 3": 1
+                            }
+                        }
+                    );
+                },
+            },
+            mounted: function () {
+                /*
+                    Generate a random ID on page load
+                */
+                const nodeId = this.generateGunfpId();
+
+                /*
+                    Create a new node to store data
+                */
+                const gunfp = db.get(nodeId);
+                this.gunfpId = nodeId;
+
+                /*
+                    Subscribe to new data
+                */
+                gunfp.on((value) => {
+                    this.gunfp = value;
+                });
+            }
+        }).mount("#app");
+
+    </script>
+</html>
