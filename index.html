@@ -4,7 +4,9 @@
         <title>gunfp: Decentralized "Facility Planning" Software</title>
 
         <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/gun/gun.js" type="text/javascript" charset="utf-8"></script>
+        
         <link href='https://fonts.googleapis.com/css?family=Alegreya+Sans:300italic' rel='stylesheet' type='text/css'>
 
         <style>
@@ -17,78 +19,215 @@
     </head>
 
     <body>
-        <div id="app">
-            <div>
+        <main 
+            id="app"
+            classs="max-w-screen"
+        >
+            <div class="px-20 py-12 flex flex-col space-y-4">
                 <div>
-                    <h1>Gun Based Collaborative ARC Generation Website</h1>
+                    <h1 class="text-2xl">Gun Based Collaborative ARC Generation Website</h1>
+                    <p class="text-xs">Created by wira-pratama</p>
                 </div>
+                
                 <div>
-                    <input 
-                        type="text"
-                        v-model="gunfpId"
+                    <h2>Manage Relations</h2>
+                    <div 
+                        class=""
                     >
+                        <input
+                            type="text"
+                            placeholder="Activity name" 
+                            v-model="newActivity.name"
+                            @keyup.enter="createActivityElement"
+                            class="w-full border rounded text-sm p-1"
+                        >
+                    </div>
+                    <div>
+                        {{activityElements}}
+                    </div>
                 </div>
+
                 <div>
-                    {{ gunfp }}
+                    <h2>Manage Relation Types</h2>
+                    <form 
+                        class="flex flex-row space-x-2"
+                        @submit.prevent="createRelationElement"
+                    >
+                        <input
+                            required
+                            type="text"
+                            placeholder="Relation symbol" 
+                            v-model="newRelation.symbol"
+                            class="w-full border rounded text-sm p-1"
+                        >
+                        <input
+                            required
+                            type="text"
+                            placeholder="Relation description" 
+                            v-model="newRelation.description"
+                            class="w-full border rounded text-sm p-1"
+                        >
+                        <input type="submit" style="display: none" />
+                    </form>
+                    <div>
+                        {{relationElements}}
+                    </div>
                 </div>
+
                 <div>
-                    <button @click="updateGunfpActivities()">Populate Data</button>
+                    <h2>Manage Causes</h2>
+                    <form 
+                        class="flex flex-row space-x-2"
+                        @submit.prevent="createReasonElement"
+                    >
+                        <input
+                            required
+                            type="text"
+                            placeholder="Reasoning symbol/id" 
+                            v-model="newReason.symbol"
+                            class="w-full border rounded text-sm p-1"
+                        >
+                        <input
+                            required
+                            type="text"
+                            placeholder="Reasoning description" 
+                            v-model="newReason.description"
+                            class="w-full border rounded text-sm p-1"
+                        >
+                        <input type="submit" style="display: none" />
+                    </form>
+                    <div>
+                        {{reasonElements}}
+                    </div>
                 </div>
             </div>
-        </div>
+        </main>
     </body>
 
     <script>
         localStorage.clear();
 
-        var gun = new Gun(['https://gun-manhattan.herokuapp.com/gun']);
+        var gun = new Gun();
         var db = gun.get('wira-pratama-gunfps');
 
         const { createApp } = Vue;
         createApp({
             data() {
                 return {
-                    gunfpId: false,
-                    gunfp: false
+                    elements: [],
+                    newMetadata: {
+                        title: '',
+                        subtitle: '',
+                        author: '',
+                        px: 40,
+                        py: 20,
+                        rh: 20,
+                        rw: 120,
+                        type: 'metadata'
+                    },
+                    newActivity: {
+                        name: '',
+                        parent: '',
+                        relation: '',
+                        reason: '',
+                        type: 'activity'
+                    },
+                    newRelation: {
+                        symbol: '',
+                        description: '',
+                        type: 'relation'
+                    },
+                    newReason: {
+                        symbol: '',
+                        description: '',
+                        type: 'reason'
+                    }
                 };
             },
-            methods: {
-                generateGunfpId: function () {
-                    return 'id-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+            computed: {
+                activityElements: function() {
+                    return this.elements.filter(function(element) {
+                        return element.element.type === 'activity';
+                    });
                 },
-                updateGunfpActivities: function () {
-                    const gunfp = db.get(this.gunfpId);
-                    var newGunfp = gunfp.put(
-                        {
-                            "activity 1" : {
-                                "activity 2": 3,
-                                "activity 3": 4
-                            },
-                            "activity 2" : {
-                                "activity 3": 1
-                            }
-                        }
-                    );
+                relationElements: function() {
+                    return this.elements.filter(function(element) {
+                        return element.element.type === 'relation';
+                    });
+                },
+                reasonElements: function() {
+                    return this.elements.filter(function(element) {
+                        return element.element.type === 'reason';
+                    });
+                },
+            },
+            methods: {
+                generateGunfpId: function (prefix) {
+                    return `${prefix}-` + Date.now() + '-' + Math.floor(Math.random() * 1000);
+                },
+                elementUpdated: function(element, nodeKey) {
+                    var existingElementIndex = this.elements.findIndex(function(element) {
+                        console.log('this here works 1')
+                        return element.key === nodeKey
+                    });
+
+                    var elementToStore = {
+                        element: element,
+                        key: nodeKey
+                    };
+
+                    if (existingElementIndex === -1) {
+                        this.elements.push(elementToStore);
+                        console.log('this here works 2')
+                    } else {
+                        this.elements.splice(existingElementIndex, 1, elementToStore);
+                        console.log('this here works 3')
+                    }
+                },
+                createActivityElement: function() {
+                    var id = this.generateGunfpId('activity')
+                    var newActivity = db.get(id);
+
+                    newActivity.put(this.newActivity);
+                    db.set(newActivity);
+                    
+                    this.newActivity = {
+                        name: '',
+                        parent: '',
+                        weight: 0,
+                        reason: 0,
+                        type: 'activity'
+                    };
+                },
+                createRelationElement: function() {
+                    var id = this.generateGunfpId('relation')
+                    var newRelation = db.get(id);
+
+                    newRelation.put(this.newRelation);
+                    db.set(newRelation);
+                    
+                    this.newRelation = {
+                        symbol: '',
+                        description: '',
+                        type: 'relation'
+                    };
+                },
+                createReasonElement: function() {
+                    var id = this.generateGunfpId('reason')
+                    var newReason = db.get(id);
+
+                    newReason.put(this.newReason);
+                    db.set(newReason);
+                    
+                    this.newReason = {
+                        symbol: '',
+                        description: '',
+                        type: 'reason'
+                    };
                 },
             },
             mounted: function () {
-                /*
-                    Generate a random ID on page load
-                */
-                const nodeId = this.generateGunfpId();
-
-                /*
-                    Create a new node to store data
-                */
-                const gunfp = db.get(nodeId);
-                this.gunfpId = nodeId;
-
-                /*
-                    Subscribe to new data
-                */
-                gunfp.on((value) => {
-                    this.gunfp = value;
-                });
+                db.map().on(this.elementUpdated.bind(this));
             }
         }).mount("#app");
 
