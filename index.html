@@ -64,14 +64,14 @@
                         <input
                             type="text"
                             placeholder="Activity name" 
-                            v-model="newActivity.name"
+                            v-model="newActivity.pActivity"
                             @keyup.enter="createActivityElement"
                             class="fira-sans-light w-full border rounded text-sm p-1"
                         >
                     </div>
                     <div class="mt-2">
                         <div class="fira-sans-light my-1" v-for="activity in activityElements">
-                            <label>{{ activity.element.name }}</label>
+                            <label>{{ activity.element.pActivity }}</label>
                         </div>
                     </div>
                 </div>
@@ -163,8 +163,8 @@
                         type: 'metadata'
                     },
                     newActivity: {
-                        name: '',
-                        parent: '',
+                        pActivity: '',
+                        sActivity: '',
                         relation: '',
                         reason: '',
                         type: 'activity'
@@ -255,7 +255,7 @@
                         Check whether newActivity has been filled
                         TODO: Add warning to user
                     */
-                    if (this.newActivity.name === '') {
+                    if (this.newActivity.pActivity === '') {
                         return;
                     }
 
@@ -263,14 +263,14 @@
                         Check whether this element already exist in the activities index
                         TODO: Add warning to user
                     */
-                    var newActivityName  = this.newActivity.name;
+                    var newActivityName  = this.newActivity.pActivity;
                     var existingActivityIndex = this.activities.findIndex(function(activity) {
                         return activity === newActivityName;
                     });
                     if (existingActivityIndex !== -1) {
                         this.newActivity = {
-                            name: '',
-                            parent: '',
+                            pActivity: '',
+                            sActivity: '',
                             weight: 0,
                             reason: 0,
                             type: 'activity'
@@ -282,17 +282,24 @@
                         Generate a new node based on an Id starting with 'activity' and store it to db
                     */
                     var id = this.generateGunfpId('activity')
-                    var dnNewActivity = await db.get(id);
+                    var dbNewActivity = await db.get(id);
 
-                    await dnNewActivity.put(this.newActivity);
-                    await db.set(dnNewActivity)
+                    await dbNewActivity.put(this.newActivity);
+                    await db.set(dbNewActivity)
+
+                    /*
+                        Check whether the activities are more than one and generate a triangular combinations if so
+                    */
+                    if (this.activities.length > 1) {
+                        return;
+                    }
 
                     /*
                         Reset the field
                     */
                     this.newActivity = {
-                        name: '',
-                        parent: '',
+                        pActivity: '',
+                        sActivity: '',
                         weight: 0,
                         reason: 0,
                         type: 'activity'
