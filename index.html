@@ -6,14 +6,31 @@
         <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/gun/gun.js" type="text/javascript" charset="utf-8"></script>
-        
-        <link href='https://fonts.googleapis.com/css?family=Alegreya+Sans:300italic' rel='stylesheet' type='text/css'>
+
+        <link href="https://fonts.googleapis.com/css2?family=Bungee+Tint&family=Fira+Sans:wght@300;500&display=swap" rel="stylesheet">
 
         <style>
             body,
             html {
                 max-width: 100vw;
-                /* font-family: 'Alegreya Sans', sans-serif; */
+            }
+
+            .bungee {
+                font-family: "Bungee Tint", sans-serif;
+                font-weight: 400;
+                font-style: normal;
+            }
+
+            .fira-sans-light {
+                font-family: "Fira Sans", sans-serif;
+                font-weight: 300;
+                font-style: normal;
+            }
+
+            .fira-sans-medium {
+                font-family: "Fira Sans", sans-serif;
+                font-weight: 600;
+                font-style: normal;
             }
         </style>
     </head>
@@ -25,12 +42,22 @@
         >
             <div class="px-20 py-12 flex flex-col space-y-4">
                 <div>
-                    <h1 class="text-2xl">Gun Based Collaborative ARC Generation Website</h1>
-                    <p class="text-xs">Created by wira-pratama</p>
+                    <h1 class="text-3xl"> 
+                        <span class="bungee">wira-pratama/GUNFP:</span>
+                        <span class="fira-sans-light pl-2">Activity Relationship Chart Made Easy</span>
+                        
+                    </h1>
+                    <p class="firsa-sans-light pt-2 text-sm">
+                        GUNFP is a decentralized single file app created to aid in creating facility planning diagrams collaboratively 
+                    </p>
+                    <p class="pt-1 text-xs firsa-sans-light text-gray-500">
+                        Created by wira-pratama
+                    </p>
+                    
                 </div>
                 
                 <div>
-                    <h2>Manage Relations</h2>
+                    <h2 class="fira-sans-medium text-base">Manage Activities</h2>
                     <div 
                         class=""
                     >
@@ -39,18 +66,18 @@
                             placeholder="Activity name" 
                             v-model="newActivity.name"
                             @keyup.enter="createActivityElement"
-                            class="w-full border rounded text-sm p-1"
+                            class="fira-sans-light w-full border rounded text-sm p-1"
                         >
                     </div>
-                    <div>
-                        <div v-for="activity in activityElements">
+                    <div class="mt-2">
+                        <div class="fira-sans-light my-1" v-for="activity in activityElements">
                             <label>{{ activity.element.name }}</label>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <h2>Manage Relation Types</h2>
+                    <h2 class="fira-sans-medium text-base">Manage Relations</h2>
                     <form 
                         class="flex flex-row space-x-2"
                         @submit.prevent="createRelationElement"
@@ -60,26 +87,26 @@
                             type="text"
                             placeholder="Relation symbol" 
                             v-model="newRelation.symbol"
-                            class="w-full border rounded text-sm p-1"
+                            class="fira-sans-light w-full border rounded text-sm p-1"
                         >
                         <input
                             required
                             type="text"
                             placeholder="Relation description" 
                             v-model="newRelation.description"
-                            class="w-full border rounded text-sm p-1"
+                            class="fira-sans-light w-full border rounded text-sm p-1"
                         >
                         <input type="submit" style="display: none" />
                     </form>
-                    <div>
-                        <div v-for="relation in relationElements">
+                    <div class="mt-2">
+                        <div class="fira-sans-light" v-for="relation in relationElements">
                             <label>{{ relation.element.symbol }} - {{ relation.element.description }}</label>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <h2>Manage Causes</h2>
+                    <h2 class="fira-sans-medium text-base">Manage Causes</h2>
                     <form 
                         class="flex flex-row space-x-2"
                         @submit.prevent="createReasonElement"
@@ -89,19 +116,19 @@
                             type="text"
                             placeholder="Reasoning symbol/id" 
                             v-model="newReason.symbol"
-                            class="w-full border rounded text-sm p-1"
+                            class="fira-sans-light w-full border rounded text-sm p-1"
                         >
                         <input
                             required
                             type="text"
                             placeholder="Reasoning description" 
                             v-model="newReason.description"
-                            class="w-full border rounded text-sm p-1"
+                            class="fira-sans-light w-full border rounded text-sm p-1"
                         >
                         <input type="submit" style="display: none" />
                     </form>
-                    <div>
-                        <div v-for="reason in reasonElements">
+                    <div class="mt-2">
+                        <div class="fira-sans-light"v-for="reason in reasonElements">
                             <label>{{ reason.element.symbol }} - {{ reason.element.description }}</label>
                         </div>
                     </div>
@@ -112,7 +139,6 @@
 
     <script>
         localStorage.clear();
-
         // var gun = new Gun(['https://gun-manhattan.herokuapp.com/gun']);
 
         var gun = new Gun();
@@ -177,7 +203,6 @@
                     return `${prefix}-` + Date.now() + '-' + Math.floor(Math.random() * 1000);
                 },
                 elementUpdated: function(element, nodeKey) {
-
                     /* 
                         Checks whether a node is a gunfp node and store it to local elements
                     */
@@ -224,7 +249,6 @@
                             this.reasons.push(elementToStore.element.symbol);
                         };
                     };
-                    
                 },
                 createActivityElement: async function() {
                     /* 
@@ -376,6 +400,5 @@
                 db.map().on(this.elementUpdated.bind(this));
             }
         }).mount("#app");
-
     </script>
 </html>
