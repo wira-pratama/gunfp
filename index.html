@@ -28,6 +28,8 @@
                     <h1 class="text-2xl">Gun Based Collaborative ARC Generation Website</h1>
                     <p class="text-xs">Created by wira-pratama</p>
                 </div>
+
+                {{activities}}
                 
                 <div>
                     <h2>Manage Relations</h2>
@@ -113,6 +115,8 @@
     <script>
         localStorage.clear();
 
+        // var gun = new Gun(['https://gun-manhattan.herokuapp.com/gun']);
+
         var gun = new Gun();
         var db = gun.get('wira-pratama-gunfps');
 
@@ -121,6 +125,7 @@
             data() {
                 return {
                     elements: [],
+                    activities: [],
                     newMetadata: {
                         title: '',
                         subtitle: '',
@@ -188,20 +193,66 @@
                     };
 
                     if (existingElementIndex === -1) {
+
+                        /*
+                            If element does not exist push to local state
+                        */
                         this.elements.push(elementToStore);
-                        console.log('item doesnt exist so pushing')
+
+                        /*
+                            If element does not exist, check whether the item already indexed in local activities activities, if not push to local activities
+                        */
+                        var existingActivityIndex = this.activities.findIndex(function(activity) {
+                            return activity === elementToStore.element.name
+                        });
+                        if (existingActivityIndex === -1) {
+                            this.activities.push(elementToStore.element.name);
+                        }
+
                     } else {
                         this.elements.splice(existingElementIndex, 1, elementToStore);
                         console.log('item already exist so indexing')
                     }
                 },
-                createActivityElement: function() {
-                    var id = this.generateGunfpId('activity')
-                    var newActivity = db.get(id);
+                createActivityElement: async function() {
+                    /* 
+                        Check whether newActivity has been filled
+                    */
+                    if (this.newActivity.name === '') {
+                        console.log('please fill something')
+                        return
+                    }
 
-                    newActivity.put(this.newActivity);
-                    db.set(newActivity)
-                    
+                    /*
+                        Check whether this element already exist in the index
+                    */
+                    var newActivityName  = this.newActivity.name;
+                    var existingActivityIndex = this.activities.findIndex(function(activity) {
+                        return activity === newActivityName;
+                    });
+                    if (existingActivityIndex !== -1) {
+                        this.newActivity = {
+                            name: '',
+                            parent: '',
+                            weight: 0,
+                            reason: 0,
+                            type: 'activity'
+                        };
+                        return;
+                    }
+
+                    /*
+                        Generate a new node based on an Id starting with 'activity' and store it to db
+                    */
+                    var id = this.generateGunfpId('activity')
+                    var dnNewActivity = await db.get(id);
+
+                    await dnNewActivity.put(this.newActivity);
+                    await db.set(dnNewActivity)
+
+                    /*
+                        Reset the field
+                    */
                     this.newActivity = {
                         name: '',
                         parent: '',
