@@ -57,6 +57,7 @@
                 </div>
                 
                 <div>
+                    {{activities}}
                     <h2 class="fira-sans-medium text-base">Manage Activities</h2>
                     <div 
                         class=""
@@ -69,9 +70,20 @@
                             class="fira-sans-light w-full border rounded text-sm p-1"
                         >
                     </div>
-                    <div class="mt-2">
-                        <div class="fira-sans-light my-1" v-for="activity in activityElements">
-                            <label>{{ activity.element.pActivity }}</label>
+                    <div class="mt-2 pl-2">
+                        <div class="fira-sans-light my-1 flex flex-row space-x-2 border-b" v-for="activity in activityElements">
+                            <div class="w-1/4">
+                                <label>{{ activity.element.pActivity }}</label>
+                            </div>
+                            <div class="w-1/4">
+                                <label>{{ activity.element.sActivity }}</label>
+                            </div> 
+                            <div class="w-1/4">
+
+                            </div>
+                            <div class="w-1/4">
+
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -183,9 +195,13 @@
             },
             computed: {
                 activityElements: function() {
-                    return this.elements.filter(function(element) {
-                        return element.element.type === 'activity';
+                    var pairedActivityElements = this.elements.filter(function(element) {
+                        return element.element.type === 'activity' && element.element.sActivity;
                     });
+                    var sortedActivityElement = pairedActivityElements.sort(function(a,b) {
+                        return a.element.pActivity.localeCompare(b.element.pActivity)
+                    })
+                    return sortedActivityElement;
                 },
                 relationElements: function() {
                     return this.elements.filter(function(element) {
@@ -227,10 +243,10 @@
                     */
                     if (/^(activity-)/.test(nodeKey)) {
                         var existingActivityIndex = this.activities.findIndex(function(activity) {
-                            return activity === elementToStore.element.name
+                            return activity === elementToStore.element.pActivity
                         });
                         if (existingActivityIndex === -1) {
-                            this.activities.push(elementToStore.element.name);
+                            this.activities.push(elementToStore.element.pActivity);
                         };
                     };
                     if (/^(relation-)/.test(nodeKey)) {
@@ -250,7 +266,7 @@
                         };
                     };
                 },
-                createActivityElement: async function() {
+                createActivityElement: function() {
                     /* 
                         Check whether newActivity has been filled
                         TODO: Add warning to user
@@ -282,16 +298,35 @@
                         Generate a new node based on an Id starting with 'activity' and store it to db
                     */
                     var id = this.generateGunfpId('activity')
-                    var dbNewActivity = await db.get(id);
+                    var dbNewActivity = db.get(id);
 
-                    await dbNewActivity.put(this.newActivity);
-                    await db.set(dbNewActivity)
+                    dbNewActivity.put(this.newActivity);
+                    db.set(dbNewActivity)
+                    this.activities.push(this.newActivity.pActivity)
 
                     /*
                         Check whether the activities are more than one and generate a triangular combinations if so
                     */
                     if (this.activities.length > 1) {
-                        return;
+                        for (
+                            let i = 0; 
+                            i < this.activities.length - 1; 
+                            i++
+                        ) {
+                            var currentActivityIndex = this.activities.length - 1;
+
+                            var id = this.generateGunfpId('activity')
+                            var dbNewActivity = db.get(id);
+
+                            dbNewActivity.put({
+                                pActivity: this.activities[i],
+                                sActivity: this.activities[currentActivityIndex],
+                                weight: 0,
+                                reason: 0,
+                                type: 'activity'
+                            });
+                            db.set(dbNewActivity)
+                        };
                     }
 
                     /*
