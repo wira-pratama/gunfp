@@ -28,8 +28,6 @@
                     <h1 class="text-2xl">Gun Based Collaborative ARC Generation Website</h1>
                     <p class="text-xs">Created by wira-pratama</p>
                 </div>
-
-                {{activities}}
                 
                 <div>
                     <h2>Manage Relations</h2>
@@ -126,6 +124,8 @@
                 return {
                     elements: [],
                     activities: [],
+                    relations: [],
+                    reasons: [],
                     newMetadata: {
                         title: '',
                         subtitle: '',
@@ -177,54 +177,67 @@
                     return `${prefix}-` + Date.now() + '-' + Math.floor(Math.random() * 1000);
                 },
                 elementUpdated: function(element, nodeKey) {
+
+                    /* 
+                        Checks whether a node is a gunfp node and store it to local elements
+                    */
                     if (!/^(activity-|relation-|reason-|metadata-)/.test(nodeKey)) {
-                        console.log(nodeKey)
                         return;
                     }
                     var existingElementIndex = this.elements.findIndex(function(element) {
                         return element.key === nodeKey
                     });
-
-                    console.log(existingElementIndex)
-
                     var elementToStore = {
                         element: element,
                         key: nodeKey
                     };
-
                     if (existingElementIndex === -1) {
-
-                        /*
-                            If element does not exist push to local state
-                        */
                         this.elements.push(elementToStore);
+                    } else {
+                        this.elements.splice(existingElementIndex, 1, elementToStore);
+                    };
 
-                        /*
-                            If element does not exist, check whether the item already indexed in local activities activities, if not push to local activities
-                        */
+                    /*
+                        If element does exist, check the type of the element and whether the item already indexed, if not push to local
+                    */
+                    if (/^(activity-)/.test(nodeKey)) {
                         var existingActivityIndex = this.activities.findIndex(function(activity) {
                             return activity === elementToStore.element.name
                         });
                         if (existingActivityIndex === -1) {
                             this.activities.push(elementToStore.element.name);
-                        }
-
-                    } else {
-                        this.elements.splice(existingElementIndex, 1, elementToStore);
-                        console.log('item already exist so indexing')
-                    }
+                        };
+                    };
+                    if (/^(relation-)/.test(nodeKey)) {
+                        var existingRelationIndex = this.relations.findIndex(function(relation) {
+                            return relation === elementToStore.element.symbol
+                        });
+                        if (existingRelationIndex === -1) {
+                            this.relations.push(elementToStore.element.symbol);
+                        };
+                    };
+                    if (/^(reason-)/.test(nodeKey)) {
+                        var existingReasonIndex = this.reasons.findIndex(function(reason) {
+                            return reason === elementToStore.element.symbol
+                        });
+                        if (existingReasonIndex === -1) {
+                            this.reasons.push(elementToStore.element.symbol);
+                        };
+                    };
+                    
                 },
                 createActivityElement: async function() {
                     /* 
                         Check whether newActivity has been filled
+                        TODO: Add warning to user
                     */
                     if (this.newActivity.name === '') {
-                        console.log('please fill something')
-                        return
+                        return;
                     }
 
                     /*
-                        Check whether this element already exist in the index
+                        Check whether this element already exist in the activities index
+                        TODO: Add warning to user
                     */
                     var newActivityName  = this.newActivity.name;
                     var existingActivityIndex = this.activities.findIndex(function(activity) {
@@ -262,12 +275,46 @@
                     };
                 },
                 createRelationElement: function() {
+                    /* 
+                        Check whether newRelation has been filled
+                        TODO: Add warning to user
+                    */
+                    if (
+                        this.newRelation.symbol === '' ||
+                        this.newRelation.description === ''
+                    ) {
+                        return;
+                    }
+
+                    /*
+                        Check whether this element already exist in the relations index
+                        TODO: Add warning to user
+                    */
+                    var newRelationSymbol  = this.newRelation.symbol;
+                    var existingRelationIndex = this.relations.findIndex(function(relation) {
+                        return relation === newRelationSymbol;
+                    });
+                    if (existingRelationIndex !== -1) {
+                        this.newRelation = {
+                            symbol: '',
+                            description: '',
+                            type: 'relation'
+                        };
+                        return;
+                    }
+
+                    /*
+                        Generate a new node based on an Id starting with 'relation' and store it to db
+                    */
                     var id = this.generateGunfpId('relation')
                     var newRelation = db.get(id);
 
                     newRelation.put(this.newRelation);
                     db.set(newRelation);
                     
+                    /*
+                        Reset the field
+                    */
                     this.newRelation = {
                         symbol: '',
                         description: '',
@@ -275,12 +322,46 @@
                     };
                 },
                 createReasonElement: function() {
+                    /* 
+                        Check whether newRelation has been filled
+                        TODO: Add warning to user
+                    */
+                    if (
+                        this.newReason.symbol === '' ||
+                        this.newReason.description === ''
+                    ) {
+                        return;
+                    }
+
+                    /*
+                        Check whether this element already exist in the relations index
+                        TODO: Add warning to user
+                    */
+                    var newReasonSymbol  = this.newReason.symbol;
+                    var existingReasonIndex = this.reasons.findIndex(function(reason) {
+                        return reason === newReasonSymbol;
+                    });
+                    if (existingReasonIndex !== -1) {
+                        this.newReason = {
+                            symbol: '',
+                            description: '',
+                            type: 'reason'
+                        };
+                        return;
+                    }
+
+                    /*
+                        Generate a new node based on an Id starting with 'reason' and store it to db
+                    */
                     var id = this.generateGunfpId('reason')
                     var newReason = db.get(id);
 
                     newReason.put(this.newReason);
                     db.set(newReason);
                     
+                    /*
+                        Reset the field
+                    */
                     this.newReason = {
                         symbol: '',
                         description: '',
@@ -289,6 +370,9 @@
                 },
             },
             mounted: function () {
+                /*
+                    Subscribe on the data
+                */
                 db.map().on(this.elementUpdated.bind(this));
             }
         }).mount("#app");
