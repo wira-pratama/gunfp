@@ -43,7 +43,9 @@
                         >
                     </div>
                     <div>
-                        {{activityElements}}
+                        <div v-for="activity in activityElements">
+                            <label>{{ activity.element.name }}</label>
+                        </div>
                     </div>
                 </div>
 
@@ -70,7 +72,9 @@
                         <input type="submit" style="display: none" />
                     </form>
                     <div>
-                        {{relationElements}}
+                        <div v-for="relation in relationElements">
+                            <label>{{ relation.element.symbol }} - {{ relation.element.description }}</label>
+                        </div>
                     </div>
                 </div>
 
@@ -97,7 +101,9 @@
                         <input type="submit" style="display: none" />
                     </form>
                     <div>
-                        {{reasonElements}}
+                        <div v-for="reason in reasonElements">
+                            <label>{{ reason.element.symbol }} - {{ reason.element.description }}</label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -166,10 +172,15 @@
                     return `${prefix}-` + Date.now() + '-' + Math.floor(Math.random() * 1000);
                 },
                 elementUpdated: function(element, nodeKey) {
+                    if (!/^(activity-|relation-|reason-|metadata-)/.test(nodeKey)) {
+                        console.log(nodeKey)
+                        return;
+                    }
                     var existingElementIndex = this.elements.findIndex(function(element) {
-                        console.log('this here works 1')
                         return element.key === nodeKey
                     });
+
+                    console.log(existingElementIndex)
 
                     var elementToStore = {
                         element: element,
@@ -178,10 +189,10 @@
 
                     if (existingElementIndex === -1) {
                         this.elements.push(elementToStore);
-                        console.log('this here works 2')
+                        console.log('item doesnt exist so pushing')
                     } else {
                         this.elements.splice(existingElementIndex, 1, elementToStore);
-                        console.log('this here works 3')
+                        console.log('item already exist so indexing')
                     }
                 },
                 createActivityElement: function() {
@@ -189,7 +200,7 @@
                     var newActivity = db.get(id);
 
                     newActivity.put(this.newActivity);
-                    db.set(newActivity);
+                    db.set(newActivity)
                     
                     this.newActivity = {
                         name: '',
