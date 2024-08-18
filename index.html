@@ -98,7 +98,7 @@
             </div> 
 
             <!-- Main App -->
-            <div class="px-20 py-12 flex flex-col space-y-4">
+            <div class="px-20 py-12 flex flex-col space-y-8">
                 <div>
                     <h1 class="text-3xl"> 
                         <span class="bungee">wira-pratama/GUNFP:</span>
@@ -196,9 +196,17 @@
                         >
                         <input type="submit" style="display: none" />
                     </form>
-                    <div class="mt-2">
-                        <div class="fira-sans-light" v-for="relation in relationElements">
-                            <label>{{ relation.element.symbol }} - {{ relation.element.description }}</label>
+                    <div class="mt-2 pl-2">
+                        <div class="fira-sans-light my-1 flex flex-row space-x-2 border-b" v-for="relation in relationElements">
+                            <div class="w-1/4">
+                                <label>{{ relation.element.symbol }}</label>
+                            </div> 
+                            <div class="w-2/4">
+                                <label>{{ relation.element.description }}</label>
+                            </div>
+                            <div class="w-1/4">
+
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -225,9 +233,17 @@
                         >
                         <input type="submit" style="display: none" />
                     </form>
-                    <div class="mt-2">
-                        <div class="fira-sans-light"v-for="reason in reasonElements">
-                            <label>{{ reason.element.symbol }} - {{ reason.element.description }}</label>
+                    <div class="mt-2 pl-2">
+                        <div class="fira-sans-light my-1 flex flex-row space-x-2 border-b"v-for="reason in reasonElements">
+                            <div class="w-1/4">
+                                <label>{{ reason.element.symbol }}</label>
+                            </div> 
+                            <div class="w-2/4">
+                                <label>{{ reason.element.description }}</label>
+                            </div>
+                            <div class="w-1/4">
+
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -286,7 +302,7 @@
                         description: '',
                         type: 'reason'
                     },
-                    activityPlaceholder: false
+                    svgDownloadURL: false
                 };
             },
             computed: {
