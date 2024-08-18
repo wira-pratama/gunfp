@@ -6,7 +6,9 @@
         <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/gun/gun.js" type="text/javascript" charset="utf-8"></script>
-        <script src=" https://cdn.jsdelivr.net/npm/paper@0.12.18/dist/paper-full.min.js "></script>
+        <!-- <script src=" https://cdn.jsdelivr.net/npm/paper@0.12.18/dist/paper-full.min.js "></script> -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.15/paper-core.min.js"></script>
+
 
         <link href="https://fonts.googleapis.com/css2?family=Bungee+Tint&family=Fira+Sans:wght@300;500&display=swap" rel="stylesheet">
 
@@ -33,6 +35,28 @@
                 font-weight: 600;
                 font-style: normal;
             }
+
+            #overlay {
+                position: fixed;
+                display: none;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 2;
+                cursor: pointer;
+            }
+
+            #content{
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%,-50%);
+                -ms-transform: translate(-50%,-50%);
+            }
         </style>
     </head>
 
@@ -41,6 +65,39 @@
             id="app"
             classs="max-w-screen"
         >
+            <!-- Overlay -->
+            <div id="overlay">
+                <div id="content">
+                    <div class="bg-white h-fit w-[40vw] p-4 rounded-lg flex flex-col space-y-4">
+                        <div>
+                            <h2 class="fira-sans-medium text-base">Generated ARC Diagram</h2>
+                        </div>
+                        <div>
+                            <canvas
+                                class="border rounded-lg h-full w-full"
+                                id="arc-svg"
+                            >
+                            </canvas> 
+                        </div>
+                        <div class="flex flex-row justify-end space-x-2">
+                            <button
+                                @click="closeModal"
+                                class="bg-green-300 border text-xs p-1 mb-3 rounded-lg firsa-sans-light shadow"
+                            >
+                                Download as SVG
+                            </button>
+                            <button
+                                @click="closeModal"
+                                class="bg-gray-300 border text-xs p-1 mb-3 rounded-lg firsa-sans-light shadow"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div> 
+
+            <!-- Main App -->
             <div class="px-20 py-12 flex flex-col space-y-4">
                 <div>
                     <h1 class="text-3xl"> 
@@ -56,7 +113,7 @@
                     </p>
                     
                 </div>
-                
+
                 <div>
                     <h2 class="fira-sans-medium text-base">Manage Activities</h2>
                     <p class="firsa-sans-light py-1 text-xs">
@@ -90,8 +147,8 @@
                                     <option
                                         v-for="relation in relationElements"
                                         :value="relation.element.symbol" 
+                                        :key="relation.key"
                                         class="font-secondary"
-                                        :selected="relation.element.symbol == '0' ? true : false"
                                     >
                                         {{ relation.element.description }}
                                     </option>
@@ -172,16 +229,25 @@
                         </div>
                     </div>
                 </div>
+
+                <div>
+                    <button 
+                        @click="openModal()"
+                        class="bg-green-600 text-white w-full fira-sans-medium rounded-lg py-2"
+                    >
+                        Generate ARC Diagram
+                    </button>
+                </div>
             </div>
         </main>
     </body>
 
     <script>
         // localStorage.clear();
-        var gun = new Gun(['https://gun-manhattan.herokuapp.com/gun']);
-
         // var gun = new Gun();
-        var db = gun.get('wira-pratama-gunfps');
+        
+        var gun = new Gun(['https://gun-manhattan.herokuapp.com/gun']);
+        var db = gun.get('wira-pratama-gunfps-dep2');
 
         const { createApp } = Vue;
         createApp({
@@ -195,10 +261,10 @@
                         title: '',
                         subtitle: '',
                         author: '',
-                        px: 40,
-                        py: 20,
-                        rh: 20,
-                        rw: 120,
+                        pad_x: 40,
+                        pad_y: 20,
+                        height: 20,
+                        length: 120,
                         type: 'metadata'
                     },
                     newActivity: {
@@ -272,7 +338,7 @@
                     } else {
                         this.elements.splice(existingElementIndex, 1, elementToStore);
                     };
-                    console.log('test')
+
                     /*
                         If element does exist, check the type of the element and whether the item already indexed, if not push to local
                     */
@@ -314,6 +380,7 @@
                     /*
                         Check whether this element already exist in the activities index
                         TODO: Add warning to user
+                        TODO: Strips of spaces and lower case first
                     */
                     var newActivityName  = this.newActivity.pActivity;
                     var existingActivityIndex = this.activities.findIndex(function(activity) {
@@ -357,8 +424,8 @@
                             dbNewActivity.put({
                                 pActivity: this.activities[i],
                                 sActivity: this.activities[currentActivityIndex],
-                                weight: 0,
-                                reason: 0,
+                                weight: '',
+                                reason: '',
                                 type: 'activity'
                             });
                             db.set(dbNewActivity)
@@ -478,6 +545,133 @@
                         type: 'reason'
                     };
                 },
+                createARCDiagram: function () {
+                    paper.setup('arc-svg');
+
+                    const padX = this.newMetadata.pad_x;
+                    const padY = this.newMetadata.pad_y;
+                    const dimH = this.newMetadata.height;
+                    const dimL = this.newMetadata.length;
+
+                    const numTile = this.activities.length;
+                    const diadimH = dimH / Math.sqrt(2);
+
+                    const startPoint = new paper.Point(
+                        padX + dimL,
+                        padY - (diadimH * numTile)
+                    );
+
+                    const anchorPoint = new paper.Point(
+                        startPoint.x,
+                        startPoint.y + (diadimH * numTile)
+                    );
+
+                    for (var i = 0; i < numTile; i++) {
+                        var tileHLine = new paper.Path.Line(
+                            new paper.Point(
+                                startPoint.x, 
+                                startPoint.y + (diadimH * i) 
+                            ), 
+                            new paper.Point(
+                                startPoint.x + (diadimH * (numTile - i)), 
+                                startPoint.y + (diadimH * i)
+                            )
+                        );
+                        tileHLine.strokeColor = 'black';
+                        tileHLine.rotate(135, anchorPoint);
+
+                        var tileVLine = new paper.Path.Line(
+                            new paper.Point(
+                                startPoint.x + (diadimH * i), 
+                                startPoint.y
+                            ), 
+                            new paper.Point(
+                                startPoint.x + (diadimH * i), 
+                                startPoint.y + (diadimH * (numTile - i))
+                            )
+                        );
+                        tileVLine.strokeColor = 'black';
+                        tileVLine.rotate(135, anchorPoint);
+
+
+                        for (var j = 0; j < (numTile-i-1); j++) {
+                            var scoreBox = new paper.Path.Rectangle({
+                                point: [
+                                    startPoint.x + (i * diadimH) + (0.2 *diadimH), 
+                                    startPoint.y + (diadimH * j) + (0.2 *diadimH)
+                                ],
+                                size: [diadimH * 0.6, diadimH * 0.6],
+                            });
+                            scoreBox.rotate(135, anchorPoint);
+
+                            var scoreText = new paper.PointText({
+                                point: [
+                                    startPoint.x + (i * diadimH),
+                                    startPoint.y + (diadimH * j)
+                                ],
+                            });
+
+                            var pActicity = this.activities[i];
+                            var sActivity = this.activities[this.activities.length - 1 - j]
+                            var scoreIndex = this.activityElements.findIndex(function(activity) {
+                                return activity.element.pActivity === pActicity && activity.element.sActivity === sActivity;
+                            });
+
+                            if (scoreIndex === -1) {
+                                scoreText.content = ``;
+                                scoreText.fillColor = 'black';
+                                scoreText.fitBounds(scoreBox.bounds); 
+                            } else {
+                                scoreText.content = this.activityElements[scoreIndex].element.relation === '0' || !this.activityElements[scoreIndex].element.relation ? '' : this.activityElements[scoreIndex].element.relation;
+                                scoreText.fillColor = 'black';
+                                scoreText.fitBounds(scoreBox.bounds); 
+                            }
+                        }
+                    };
+
+                    for (var i = 0; i <= numTile; i++) {
+                        var hLine = new paper.Path.Line(
+                            new paper.Point(
+                                padX, 
+                                padY + (diadimH * Math.sqrt(2) * i) 
+                            ), 
+                            new paper.Point(
+                                padX + dimL, 
+                                padY + (diadimH * Math.sqrt(2) * i)
+                            )
+                        );
+                        hLine.strokeColor = 'black';
+                    };
+
+                    for (var i = 0; i < numTile; i++) {
+                        var labelText = new paper.PointText({
+                            point: [
+                                padX + (0.05 * dimL),
+                                padY + (diadimH * Math.sqrt(2) * i) +  (diadimH * Math.sqrt(2) * 0.70)
+                            ],
+                        });
+                        labelText.content = this.activities[i];
+                        labelText.fontSize = diadimH * Math.sqrt(2) * 0.5;
+                        labelText.fillColor = 'black';
+                    };
+
+                    var openingVLine = new paper.Path.Line(
+                        new paper.Point(
+                            padX, 
+                            padY
+                        ), 
+                        new paper.Point(
+                            padX, 
+                            padY + (diadimH * Math.sqrt(2) * numTile)
+                        )
+                    );
+                    openingVLine.strokeColor = 'black';
+
+                    paper.view.viewSize = new paper.Size(
+                        (padX * 2) + dimL + (dimH * numTile), 
+                        (padY * 2) + (dimH * numTile)
+                    );
+                },
                 createRelationsForARC: function () {
                     const ARC_RELATIONS = [
                         {
@@ -540,7 +734,14 @@
                         db.set(newReason);
                         this.relations.push(arcRelation.symbol)
                     })
-                }
+                },
+                openModal: function () {
+                    this.createARCDiagram();
+                    document.getElementById("overlay").style.display = "block";
+                },
+                closeModal: function () {
+                    document.getElementById("overlay").style.display = "none";
+                },
             },
             mounted: function () {
                 /*
