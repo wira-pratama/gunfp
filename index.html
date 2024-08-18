@@ -417,21 +417,9 @@
                         TODO: Add warning to user
                         TODO: Strips of spaces and lower case first
                     */
-                    var newActivityName  = this.newActivity.pActivity;
-                    if (newActivityName == this.activityPlaceholder) {
-                        this.newActivity = {
-                            pActivity: '',
-                            sActivity: '',
-                            relation: '',
-                            reason: '',
-                            type: 'activity'
-                        };
-                        return;
-                    };
-
-                    
+                    var newActivityName  = this.newActivity.pActivity;                    
                     var existingActivityIndex = this.activities.findIndex(function(activity) {
-                        return activity === newActivityName;
+                        return activity.replace(/\s+/g, '') === newActivityName.replace(/\s+/g, '');
                     });
                     if (existingActivityIndex !== -1) {
                         this.newActivity = {
@@ -504,7 +492,7 @@
                     */
                     var newRelationSymbol  = this.newRelation.symbol;
                     var existingRelationIndex = this.relations.findIndex(function(relation) {
-                        return relation === newRelationSymbol;
+                        return relation.replace(/\s+/g, '') === newRelationSymbol.replace(/\s+/g, '');
                     });
                     if (existingRelationIndex !== -1) {
                         this.newRelation = {
@@ -551,7 +539,7 @@
                     */
                     var newReasonSymbol  = this.newReason.symbol;
                     var existingReasonIndex = this.reasons.findIndex(function(reason) {
-                        return reason === newReasonSymbol;
+                        return reason.replace(/\s+/g, '') === newReasonSymbol.replace(/\s+/g, '');
                     });
                     if (existingReasonIndex !== -1) {
                         this.newReason = {
