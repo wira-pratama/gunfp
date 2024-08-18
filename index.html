@@ -81,7 +81,8 @@
                         </div>
                         <div class="flex flex-row justify-end space-x-2">
                             <button
-                                @click="closeModal"
+                                v-if="svgDownloadURL"
+                                @click="downloadSVG"
                                 class="bg-green-300 border text-xs p-1 mb-3 rounded-lg firsa-sans-light shadow"
                             >
                                 Download as SVG
@@ -212,7 +213,7 @@
                 </div>
 
                 <div>
-                    <h2 class="fira-sans-medium text-base">Manage Causes</h2>
+                    <h2 class="fira-sans-medium text-base">Manage Reasoning</h2>
                     <form 
                         class="flex flex-row space-x-2"
                         @submit.prevent="createReasonElement"
@@ -705,6 +706,8 @@
                         (padX * 2) + dimL + (dimH * numTile), 
                         (padY * 2) + (dimH * numTile)
                     );
+
+                    this.svgDownloadURL = "data:image/svg+xml;utf8," + encodeURIComponent(paper.project.exportSVG({asString:true}))
                 },
                 createRelationsForARC: function () {
                     const ARC_RELATIONS = [
@@ -776,6 +779,12 @@
                 closeModal: function () {
                     document.getElementById("overlay").style.display = "none";
                 },
+                downloadSVG: function () {
+                    var link = document.createElement("a");
+                    link.download = "svgdiagram_arc.svg";
+                    link.href = this.svgDownloadURL;
+                    link.click();
+                }
             },
             mounted: function () {
                 /*
