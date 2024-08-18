@@ -129,6 +129,9 @@
                             @keyup.enter="createActivityElement"
                             class="fira-sans-light w-full border rounded text-sm p-1"
                         >
+                        <div v-if="activities.length === 1">
+                            <label class="text-xs fira-sans-light text-gray-500">You need minimum of two activity, the one you just input was: "{{ activities[0] }}"</label>
+                        </div>
                     </div>
                     <div class="mt-2 pl-2">
                         <div class="fira-sans-light my-1 flex flex-row space-x-2 border-b" v-for="activity in activityElements">
@@ -153,7 +156,6 @@
                                         {{ relation.element.description }}
                                     </option>
                                 </select>
-
                             </div>
                             <div class="w-1/4">
 
@@ -243,10 +245,10 @@
     </body>
 
     <script>
-        // localStorage.clear();
-        // var gun = new Gun();
+        localStorage.clear();
+        var gun = new Gun();
         
-        var gun = new Gun(['https://gun-manhattan.herokuapp.com/gun']);
+        // var gun = new Gun(['https://gun-manhattan.herokuapp.com/gun']);
         var db = gun.get('wira-pratama-gunfps-dep2');
 
         const { createApp } = Vue;
@@ -284,6 +286,7 @@
                         description: '',
                         type: 'reason'
                     },
+                    activityPlaceholder: false
                 };
             },
             computed: {
@@ -378,11 +381,38 @@
                     }
 
                     /*
+                        If there are no activities, store the activity in the activities index and exit
+                    */
+                    if (this.activities.length === 0) {
+                        this.activities.push(this.newActivity.pActivity)
+                        this.newActivity = {
+                            pActivity: '',
+                            sActivity: '',
+                            relation: '',
+                            reason: '',
+                            type: 'activity'
+                        };
+                        return;
+                    };
+
+                    /*
                         Check whether this element already exist in the activities index
                         TODO: Add warning to user
                         TODO: Strips of spaces and lower case first
                     */
                     var newActivityName  = this.newActivity.pActivity;
+                    if (newActivityName == this.activityPlaceholder) {
+                        this.newActivity = {
+                            pActivity: '',
+                            sActivity: '',
+                            relation: '',
+                            reason: '',
+                            type: 'activity'
+                        };
+                        return;
+                    };
+
+                    
                     var existingActivityIndex = this.activities.findIndex(function(activity) {
                         return activity === newActivityName;
                     });
@@ -398,40 +428,28 @@
                     }
 
                     /*
-                        Generate a new node based on an Id starting with 'activity' and store it to db
-                    */
-                    var id = this.generateGunfpId('activity')
-                    var dbNewActivity = db.get(id);
-
-                    dbNewActivity.put(this.newActivity);
-                    db.set(dbNewActivity)
-                    this.activities.push(this.newActivity.pActivity)
-
-                    /*
                         Check whether the activities are more than one and generate a triangular combinations if so
                     */
-                    if (this.activities.length > 1) {
-                        for (
-                            let i = 0; 
-                            i < this.activities.length - 1; 
-                            i++
-                        ) {
-                            var currentActivityIndex = this.activities.length - 1;
+                    this.activities.push(this.newActivity.pActivity)
+                    for (
+                        let i = 0; 
+                        i < this.activities.length - 1; 
+                        i++
+                    ) {
+                        var currentActivityIndex = this.activities.length - 1;
 
-                            var id = this.generateGunfpId('activity')
-                            var dbNewActivity = db.get(id);
+                        var id = this.generateGunfpId('activity')
+                        var dbNewActivity = db.get(id);
 
-                            dbNewActivity.put({
-                                pActivity: this.activities[i],
-                                sActivity: this.activities[currentActivityIndex],
-                                weight: '',
-                                reason: '',
-                                type: 'activity'
-                            });
-                            db.set(dbNewActivity)
-                        };
-                    }
-
+                        dbNewActivity.put({
+                            pActivity: this.activities[i],
+                            sActivity: this.activities[currentActivityIndex],
+                            weight: '',
+                            reason: '',
+                            type: 'activity'
+                        });
+                        db.set(dbNewActivity);
+                    };
                     /*
                         Reset the field
                     */
