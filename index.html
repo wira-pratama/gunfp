@@ -353,6 +353,9 @@
             },
             methods: {
                 generateGunfpId: function (prefix) {
+                    /* 
+                        Generate a unique id based on a prefix. this is used for element indetification
+                    */
                     return `${prefix}-` + Date.now() + '-' + Math.floor(Math.random() * 1000);
                 },
                 elementUpdated: function(element, nodeKey) {
@@ -470,6 +473,7 @@
                         });
                         db.set(dbNewActivity);
                     };
+
                     /*
                         Reset the field
                     */
@@ -547,7 +551,6 @@
                 createReasonElement: function() {
                     /* 
                         Check whether newRelation has been filled
-                        TODO: Add warning to user
                     */
                     if (
                         this.newReason.symbol === ''
@@ -563,10 +566,8 @@
                         return;
                     }
 
-
                     /*
                         Check whether this element already exist in the relations index
-                        TODO: Add warning to user
                     */
                     var newReasonSymbol  = this.newReason.symbol;
                     var existingReasonIndex = this.reasons.findIndex(function(reason) {
@@ -601,6 +602,9 @@
                     };
                 },
                 createARCDiagram: function () {
+                    /*
+                        Paper setup and metadata config
+                    */
                     paper.setup('arc-svg');
 
                     const padX = this.newMetadata.pad_x;
@@ -611,16 +615,28 @@
                     const numTile = this.activities.length;
                     const diadimH = dimH / Math.sqrt(2);
 
+                    /*
+                        Set the starting point from top left corner (NW)
+                    */
                     const startPoint = new paper.Point(
                         padX + dimL,
                         padY - (diadimH * numTile)
                     );
 
+                    /*
+                        Set the anchor point for rotation of the relations table
+                    */
                     const anchorPoint = new paper.Point(
                         startPoint.x,
                         startPoint.y + (diadimH * numTile)
                     );
 
+                    /*
+                        Draws the line from the starting point then rotates
+                        |-|-|-|
+                          |-|-|
+                            |-|
+                    */
                     for (var i = 0; i < numTile; i++) {
                         var tileHLine = new paper.Path.Line(
                             new paper.Point(
@@ -648,7 +664,9 @@
                         tileVLine.strokeColor = 'black';
                         tileVLine.rotate(135, anchorPoint);
 
-
+                        /*
+                            Draws the box and fill it with the right content
+                        */
                         for (var j = 0; j < (numTile-i-1); j++) {
                             var scoreBox = new paper.Path.Rectangle({
                                 point: [
@@ -684,6 +702,9 @@
                         }
                     };
 
+                    /*
+                        Draw the topline of the activities table
+                    */
                     for (var i = 0; i <= numTile; i++) {
                         var hLine = new paper.Path.Line(
                             new paper.Point(
@@ -698,6 +719,9 @@
                         hLine.strokeColor = 'black';
                     };
 
+                    /*
+                        Draw text for each table, the fit of the text is determined by height and length
+                    */
                     for (var i = 0; i < numTile; i++) {
                         var labelText = new paper.PointText({
                             point: [
@@ -710,6 +734,9 @@
                         labelText.fillColor = 'black';
                     };
 
+                    /*
+                        Close the bottomline of the activities table
+                    */
                     var openingVLine = new paper.Path.Line(
                         new paper.Point(
                             padX, 
@@ -722,14 +749,23 @@
                     );
                     openingVLine.strokeColor = 'black';
 
+                    /*
+                        Resize the canvas so that it matches the settings
+                    */
                     paper.view.viewSize = new paper.Size(
                         (padX * 2) + dimL + (dimH * numTile), 
                         (padY * 2) + (dimH * numTile)
                     );
 
+                    /*
+                        Create the download link
+                    */
                     this.svgDownloadURL = "data:image/svg+xml;utf8," + encodeURIComponent(paper.project.exportSVG({asString:true}))
                 },
                 createRelationsForARC: function () {
+                    /*
+                        The most popular relation set for ARC
+                    */
                     const ARC_RELATIONS = [
                         {
                             symbol: '0',
