@@ -57,6 +57,15 @@
                 transform: translate(-50%,-50%);
                 -ms-transform: translate(-50%,-50%);
             }
+
+            #notification {
+                position: absolute;
+                display: none;
+                bottom: 20px;
+                right: 20px;
+                z-index: 3;
+                cursor: pointer;
+            }
         </style>
     </head>
 
@@ -65,6 +74,16 @@
             id="app"
             classs="max-w-screen"
         >
+            <!-- Notifications -->
+            <div id="notification">
+                <div 
+                    v-if="notificationMessage" 
+                    class="h-fit p-2 rounded-lg bg-yellow-300 shadow text-white bungee"
+                >
+                    {{ notificationMessage }}
+                </div>
+            </div> 
+
             <!-- Overlay -->
             <div id="overlay">
                 <div id="content">
@@ -171,7 +190,7 @@
                         This is where you specify your closeness ratings.
                     </p>
                     <button
-                        class="bg-yellow-300 border text-xs p-1 mb-3 rounded-lg firsa-sans-light shadow"
+                        class="bg-gray-300 border text-xs px-2 py-1 mb-3 rounded-lg firsa-sans-light shadow"
                         @click="createRelationsForARC"
                     >
                         use Activity Relationship Chart Closeness Ratings
@@ -182,14 +201,12 @@
                         @submit.prevent="createRelationElement"
                     >
                         <input
-                            required
                             type="text"
                             placeholder="Relation symbol" 
                             v-model="newRelation.symbol"
                             class="fira-sans-light w-full border rounded text-sm p-1"
                         >
                         <input
-                            required
                             type="text"
                             placeholder="Relation description" 
                             v-model="newRelation.description"
@@ -219,14 +236,12 @@
                         @submit.prevent="createReasonElement"
                     >
                         <input
-                            required
                             type="text"
                             placeholder="Reasoning symbol/id" 
                             v-model="newReason.symbol"
                             class="fira-sans-light w-full border rounded text-sm p-1"
                         >
                         <input
-                            required
                             type="text"
                             placeholder="Reasoning description" 
                             v-model="newReason.description"
@@ -303,7 +318,8 @@
                         description: '',
                         type: 'reason'
                     },
-                    svgDownloadURL: false
+                    svgDownloadURL: false,
+                    notificationMessage: false
                 };
             },
             computed: {
@@ -391,9 +407,9 @@
                 createActivityElement: function() {
                     /* 
                         Check whether newActivity has been filled
-                        TODO: Add warning to user
                     */
                     if (this.newActivity.pActivity === '') {
+                        this.openNotification('Activity name must not be empty');
                         return;
                     }
 
@@ -414,14 +430,13 @@
 
                     /*
                         Check whether this element already exist in the activities index
-                        TODO: Add warning to user
-                        TODO: Strips of spaces and lower case first
                     */
                     var newActivityName  = this.newActivity.pActivity;                    
                     var existingActivityIndex = this.activities.findIndex(function(activity) {
                         return activity.replace(/\s+/g, '') === newActivityName.replace(/\s+/g, '');
                     });
                     if (existingActivityIndex !== -1) {
+                        this.openNotification('Activity name must be unique');
                         this.newActivity = {
                             pActivity: '',
                             sActivity: '',
@@ -480,9 +495,16 @@
                         TODO: Add warning to user
                     */
                     if (
-                        this.newRelation.symbol === '' ||
+                        this.newRelation.symbol === ''
+                    ) {
+                        this.openNotification('Relation symbol must not be empty');
+                        return;
+                    }
+
+                    if (
                         this.newRelation.description === ''
                     ) {
+                        this.openNotification('Relation description must not be empty');
                         return;
                     }
 
@@ -495,6 +517,7 @@
                         return relation.replace(/\s+/g, '') === newRelationSymbol.replace(/\s+/g, '');
                     });
                     if (existingRelationIndex !== -1) {
+                        this.openNotification('Relation symbol must be unique');
                         this.newRelation = {
                             symbol: '',
                             description: '',
@@ -527,11 +550,19 @@
                         TODO: Add warning to user
                     */
                     if (
-                        this.newReason.symbol === '' ||
-                        this.newReason.description === ''
+                        this.newReason.symbol === ''
                     ) {
+                        this.openNotification('Reason symbol must not be empty');
                         return;
                     }
+
+                    if (
+                        this.newReason.description === ''
+                    ) {
+                        this.openNotification('Reason description must not be empty');
+                        return;
+                    }
+
 
                     /*
                         Check whether this element already exist in the relations index
@@ -542,6 +573,7 @@
                         return reason.replace(/\s+/g, '') === newReasonSymbol.replace(/\s+/g, '');
                     });
                     if (existingReasonIndex !== -1) {
+                        this.openNotification('Reason symbol must not be empty');
                         this.newReason = {
                             symbol: '',
                             description: '',
@@ -766,6 +798,15 @@
                 },
                 closeModal: function () {
                     document.getElementById("overlay").style.display = "none";
+                },
+                openNotification: function (msg) {
+                    this.notificationMessage = msg;
+                    document.getElementById("notification").style.display = "block";
+
+                    setTimeout(() => {
+                        document.getElementById("notification").style.display = "none";
+                        this.notificationMessage = false;
+                    }, 2000);
                 },
                 downloadSVG: function () {
                     var link = document.createElement("a");
