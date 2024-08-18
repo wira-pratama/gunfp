@@ -6,6 +6,7 @@
         <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/gun/gun.js" type="text/javascript" charset="utf-8"></script>
+        <script src=" https://cdn.jsdelivr.net/npm/paper@0.12.18/dist/paper-full.min.js "></script>
 
         <link href="https://fonts.googleapis.com/css2?family=Bungee+Tint&family=Fira+Sans:wght@300;500&display=swap" rel="stylesheet">
 
@@ -59,6 +60,9 @@
                 <div>
                     {{activities}}
                     <h2 class="fira-sans-medium text-base">Manage Activities</h2>
+                    <p class="firsa-sans-light py-1 text-xs">
+                        This is where you create and set relations and reasons for your activities.
+                    </p>
                     <div 
                         class=""
                     >
@@ -89,7 +93,18 @@
                 </div>
 
                 <div>
+                    {{relations}}
                     <h2 class="fira-sans-medium text-base">Manage Relations</h2>
+                    <p class="firsa-sans-light py-1 text-xs">
+                        This is where you specify your closeness ratings.
+                    </p>
+                    <button
+                        class="bg-yellow-300 border text-xs p-1 mb-3 rounded-lg firsa-sans-light shadow"
+                        @click="createRelationsForARC"
+                    >
+                        use Activity Relationship Chart Closeness Ratings
+                    </button>
+
                     <form 
                         class="flex flex-row space-x-2"
                         @submit.prevent="createRelationElement"
@@ -118,6 +133,7 @@
                 </div>
 
                 <div>
+                    {{ reasons }}
                     <h2 class="fira-sans-medium text-base">Manage Causes</h2>
                     <form 
                         class="flex flex-row space-x-2"
@@ -195,12 +211,20 @@
             },
             computed: {
                 activityElements: function() {
+                    /*
+                        Find all activities that are paired (have sActivity)
+                    */
                     var pairedActivityElements = this.elements.filter(function(element) {
                         return element.element.type === 'activity' && element.element.sActivity;
                     });
+
+                    /*
+                        This sorts activities based on pActivity
+                    */
                     var sortedActivityElement = pairedActivityElements.sort(function(a,b) {
                         return a.element.pActivity.localeCompare(b.element.pActivity)
                     })
+
                     return sortedActivityElement;
                 },
                 relationElements: function() {
@@ -220,7 +244,7 @@
                 },
                 elementUpdated: function(element, nodeKey) {
                     /* 
-                        Checks whether a node is a gunfp node and store it to local elements
+                        Checks whether a node has the corrent id format and store it to local elements
                     */
                     if (!/^(activity-|relation-|reason-|metadata-)/.test(nodeKey)) {
                         return;
@@ -237,7 +261,7 @@
                     } else {
                         this.elements.splice(existingElementIndex, 1, elementToStore);
                     };
-
+                    console.log('test')
                     /*
                         If element does exist, check the type of the element and whether the item already indexed, if not push to local
                     */
@@ -250,6 +274,7 @@
                         };
                     };
                     if (/^(relation-)/.test(nodeKey)) {
+                        console.log('test')
                         var existingRelationIndex = this.relations.findIndex(function(relation) {
                             return relation === elementToStore.element.symbol
                         });
@@ -287,8 +312,8 @@
                         this.newActivity = {
                             pActivity: '',
                             sActivity: '',
-                            weight: 0,
-                            reason: 0,
+                            relation: '',
+                            reason: '',
                             type: 'activity'
                         };
                         return;
@@ -335,8 +360,8 @@
                     this.newActivity = {
                         pActivity: '',
                         sActivity: '',
-                        weight: 0,
-                        reason: 0,
+                        relation: '',
+                        reason: '',
                         type: 'activity'
                     };
                 },
@@ -434,6 +459,69 @@
                         type: 'reason'
                     };
                 },
+                createRelationsForARC: function () {
+                    const ARC_RELATIONS = [
+                        {
+                            symbol: '0',
+                            description: 'Relation Not Set',
+                            type: 'relation'
+                        },
+                        {
+                            symbol: 'A',
+                            description: 'Absolutely Necessary',
+                            type: 'relation'
+                        },
+                        {
+                            symbol: 'E',
+                            description: 'Especially Important',
+                            type: 'relation'
+                        },
+                        {
+                            symbol: 'I',
+                            description: 'Important',
+                            type: 'relation'
+                        },
+                        {
+                            symbol: 'O',
+                            description: 'Ordinary Closeness',
+                            type: 'relation'
+                        },
+                        {
+                            symbol: 'U',
+                            description: 'Unnecessary',
+                            type: 'relation'
+                        },
+                        {
+                            symbol: 'X',
+                            description: 'Avoid Closeness',
+                            type: 'relation'
+                        },
+                    ];
+
+                    ARC_RELATIONS.forEach((arcRelation) => {
+                        /*
+                            Check whether this element already exist in the relations index
+                            TODO: Add warning to user
+                        */
+                        var newReasonSymbol  = arcRelation.symbol;
+                        var existingReasonIndex = this.reasons.findIndex(function(reason) {
+                            return reason === newReasonSymbol;
+                        });
+                        if (existingReasonIndex !== -1) {
+                            return;
+                        }
+
+                        /*
+                            Generate a new node based on an Id starting with 'reason' and store it to db
+                        */
+                        var id = this.generateGunfpId('reason')
+                        var newReason = db.get(id);
+
+                        newReason.put(arcRelation);
+                        db.set(newReason);
+                        this.relations.push(arcRelation.symbol)
+                    })
+                }
             },
             mounted: function () {
                 /*
