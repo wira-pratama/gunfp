@@ -58,7 +58,6 @@
                 </div>
                 
                 <div>
-                    {{activities}}
                     <h2 class="fira-sans-medium text-base">Manage Activities</h2>
                     <p class="firsa-sans-light py-1 text-xs">
                         This is where you create and set relations and reasons for your activities.
@@ -83,6 +82,20 @@
                                 <label>{{ activity.element.sActivity }}</label>
                             </div> 
                             <div class="w-1/4">
+                                <select 
+                                    @change="setActivityRelation(activity)"
+                                    v-model="activity.element.relation"
+                                    class="select w-full select-bordered font-secondary"
+                                >
+                                    <option
+                                        v-for="relation in relationElements"
+                                        :value="relation.element.symbol" 
+                                        class="font-secondary"
+                                        :selected="relation.element.symbol == '0' ? true : false"
+                                    >
+                                        {{ relation.element.description }}
+                                    </option>
+                                </select>
 
                             </div>
                             <div class="w-1/4">
@@ -93,7 +106,6 @@
                 </div>
 
                 <div>
-                    {{relations}}
                     <h2 class="fira-sans-medium text-base">Manage Relations</h2>
                     <p class="firsa-sans-light py-1 text-xs">
                         This is where you specify your closeness ratings.
@@ -133,7 +145,6 @@
                 </div>
 
                 <div>
-                    {{ reasons }}
                     <h2 class="fira-sans-medium text-base">Manage Causes</h2>
                     <form 
                         class="flex flex-row space-x-2"
@@ -166,10 +177,10 @@
     </body>
 
     <script>
-        localStorage.clear();
-        // var gun = new Gun(['https://gun-manhattan.herokuapp.com/gun']);
+        // localStorage.clear();
+        var gun = new Gun(['https://gun-manhattan.herokuapp.com/gun']);
 
-        var gun = new Gun();
+        // var gun = new Gun();
         var db = gun.get('wira-pratama-gunfps');
 
         const { createApp } = Vue;
@@ -206,7 +217,7 @@
                         symbol: '',
                         description: '',
                         type: 'reason'
-                    }
+                    },
                 };
             },
             computed: {
@@ -364,6 +375,14 @@
                         reason: '',
                         type: 'activity'
                     };
+                },
+                setActivityRelation: function(activity) {
+                    /*
+                        Set activity changes to gundb
+                    */
+                    db.get(activity.key).put({
+                        relation: activity.element.relation
+                    });
                 },
                 createRelationElement: function() {
                     /* 
