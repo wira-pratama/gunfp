@@ -135,6 +135,7 @@
                 </div>
 
                 <div>
+                    {{activities}}
                     <h2 class="fira-sans-medium text-base">Manage Activities</h2>
                     <p class="firsa-sans-light py-1 text-xs">
                         This is where you create and set relations and reasons for your activities.
@@ -177,8 +178,13 @@
                                     </option>
                                 </select>
                             </div>
-                            <div class="w-1/4">
-
+                            <div class="w-1/4 flex flex-row justify-end">
+                                <button
+                                    @click="deleteActivity(activity)" 
+                                    class="bg-red-300 border text-xs px-2 py-1 mb-3 rounded-lg firsa-sans-light shadow"
+                                >
+                                    Delete
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -360,7 +366,7 @@
                 },
                 elementUpdated: function(element, nodeKey) {
                     /* 
-                        Checks whether a node has the corrent id format and store it to local elements
+                        Checks whether a node has the corrent id format
                     */
                     if (!/^(activity-|relation-|reason-|metadata-)/.test(nodeKey)) {
                         return;
@@ -368,6 +374,19 @@
                     var existingElementIndex = this.elements.findIndex(function(element) {
                         return element.key === nodeKey
                     });
+
+                    /*
+                        Check whether element is null, if so remove the item from the activity list
+                    */
+                    if (element === null) {
+                        this.elements.splice(existingElementIndex, 1);
+                        return;
+                    }
+
+                    /*
+                        If element is not null, store to the index
+                    
+                    */
                     var elementToStore = {
                         element: element,
                         key: nodeKey
@@ -484,6 +503,32 @@
                         reason: '',
                         type: 'activity'
                     };
+                },
+                deleteActivity: function (targetActivity) {
+                    /*
+                        Get node ids where the pActivity key is the same as targetActivity and delete
+                    */
+                    let activityElementKeystoDelete = this.activityElements.map((activityElement) => {
+                        if (activityElement.element.pActivity === targetActivity.element.pActivity) {
+                            return activityElement.key;
+                        } else {
+                            return false;
+                        };
+                    });
+
+                    activityElementKeystoDelete.forEach((elementKey) => {
+                        if (elementKey) {
+                            db.get(elementKey).put(null);
+                        };
+                    });
+
+                    /*
+                        Update the activities index to exclude the targetActivity pActivity
+                    */
+                    var existingActivityIndex = this.activities.findIndex(function(activity) {
+                        return activity === targetActivity.element.pActivity
+                    });
+                    this.activities.splice(existingActivityIndex, 1);
                 },
                 setActivityRelation: function(activity) {
                     /*
