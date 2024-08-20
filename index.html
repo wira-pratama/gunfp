@@ -59,10 +59,10 @@
             }
 
             #notification {
-                position: absolute;
+                position: fixed;
                 display: none;
-                bottom: 20px;
-                right: 20px;
+                top: 10px;
+                right: 10px;
                 z-index: 3;
                 cursor: pointer;
             }
@@ -78,7 +78,7 @@
             <div id="notification">
                 <div 
                     v-if="notificationMessage" 
-                    class="h-fit p-2 rounded-lg bg-yellow-300 shadow text-white bungee"
+                    class="p-2 rounded-lg bg-yellow-300 shadow text-white bungee"
                 >
                     {{ notificationMessage }}
                 </div>
@@ -115,10 +115,10 @@
                         </div>
                     </div>
                 </div>
-            </div> 
+            </div>
 
             <!-- Main App -->
-            <div class="px-20 py-12 flex flex-col space-y-8">
+            <div class="px-20 py-12 flex flex-col space-y-10">
                 <div>
                     <h1 class="text-3xl"> 
                         <span class="bungee">wira-pratama/GUNFP:</span>
@@ -131,178 +131,207 @@
                     <p class="pt-1 text-xs firsa-sans-light text-gray-500">
                         Created by wira-pratama
                     </p>
-                    
                 </div>
 
-                <div>
-                    <h2 class="fira-sans-medium text-base">Manage Activities</h2>
-                    <p class="firsa-sans-light py-1 text-xs">
-                        This is where you create and set relations and reasons for your activities.
-                    </p>
-                    <div 
-                        class=""
-                    >
-                        <input
-                            type="text"
-                            placeholder="Activity name" 
-                            v-model="newActivity.pActivity"
-                            @keyup.enter="createActivityElement"
-                            class="fira-sans-light w-full border rounded text-sm p-1"
+                <!-- connect to gunfp node -->
+                <div class="flex flex-col space-y-8">
+                    <div>
+                        <h2 class="fira-sans-medium text-base">Create or Connect to A <span class="bungee">Gunfp</span> Workspace</h2>
+                        <p class="firsa-sans-light py-1 text-xs">
+                            This is your auto generated gunfp workspace id, share this with other people to work collaboratively.
+                        </p>
+                        <div 
+                            class="flex flex-row space-x-2"
                         >
-                        <div v-if="activities.length === 1">
-                            <label class="text-xs fira-sans-light text-gray-500">You need minimum of two activity, the one you just input was: "{{ activities[0] }}"</label>
+                            <input
+                                type="text"
+                                placeholder="Activity name" 
+                                v-model="gunfpId"
+                                class="fira-sans-light w-full border rounded text-sm p-1"
+                            >
+                            <button
+                                class="bg-green-100 text-xs px-2 py-1 rounded-lg firsa-sans-light shadow"
+                                @click="connectAndListenToNewGunfp"
+                            >
+                                Connect
+                            </button>
                         </div>
                     </div>
+                </div>
 
-                    <div class="mt-4 pl-2">
-                        <div class="fira-sans-light my-1 flex flex-row space-x-2 border-b" v-for="activity in activityElements">
-                            <div class="w-1/4">
-                                <label>{{ activity.element.pActivity }}</label>
+                <!-- After user is connected to a gunfp node -->
+                <div class="flex flex-col space-y-8">
+                    <div>
+                        <h2 class="fira-sans-medium text-base">Manage Activities</h2>
+                        <p class="firsa-sans-light py-1 text-xs">
+                            This is where you create and set relations and reasons for your activities.
+                        </p>
+                        <div 
+                            class=""
+                        >
+                            <input
+                                type="text"
+                                placeholder="Activity name" 
+                                v-model="newActivity.pActivity"
+                                @keyup.enter="createActivityElement"
+                                class="fira-sans-light w-full border rounded text-sm p-1"
+                            >
+                            <div v-if="activities.length === 1">
+                                <label class="text-xs fira-sans-light text-gray-500">You need minimum of two activity, the one you just input was: "{{ activities[0] }}"</label>
                             </div>
-                            <div class="w-1/4">
-                                <label>{{ activity.element.sActivity }}</label>
-                            </div> 
-                            <div class="w-1/4">
-                                <select 
-                                    @change="setActivityRelation(activity)"
-                                    v-model="activity.element.relation"
-                                    class="select w-full select-bordered font-secondary"
-                                >
-                                    <option
-                                        v-for="relation in relationElements"
-                                        :value="relation.element.symbol" 
-                                        :key="relation.key"
-                                        class="font-secondary"
+                        </div>
+
+                        <div class="mt-4 pl-2">
+                            <div class="fira-sans-light my-1 flex flex-row space-x-2 border-b" v-for="activity in activityElements">
+                                <div class="w-1/4">
+                                    <label>{{ activity.element.pActivity }}</label>
+                                </div>
+                                <div class="w-1/4">
+                                    <label>{{ activity.element.sActivity }}</label>
+                                </div> 
+                                <div class="w-1/4">
+                                    <select 
+                                        @change="setActivityRelation(activity)"
+                                        v-model="activity.element.relation"
+                                        class="select w-full select-bordered font-secondary"
                                     >
-                                        {{ relation.element.description }}
-                                    </option>
-                                </select>
-                            </div>
-                            <div class="w-1/4 flex flex-row justify-end">
-                                <button
-                                    @click="deleteActivity(activity)" 
-                                    class="text-xs text-red-500 px-2 py-1 firsa-sans-light"
-                                >
-                                    Delete Primary Keys
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h2 class="fira-sans-medium text-base">Manage Relations</h2>
-                    <p class="firsa-sans-light py-1 text-xs">
-                        This is where you specify your closeness ratings.
-                    </p>
-                    <button
-                        class="bg-gray-300 border text-xs px-2 py-1 mb-3 rounded-lg firsa-sans-light shadow"
-                        @click="createRelationsForARC"
-                    >
-                        use Activity Relationship Chart Closeness Ratings
-                    </button>
-
-                    <form 
-                        class="flex flex-row space-x-2"
-                        @submit.prevent="createRelationElement"
-                    >
-                        <input
-                            type="text"
-                            placeholder="Relation symbol" 
-                            v-model="newRelation.symbol"
-                            class="fira-sans-light w-full border rounded text-sm p-1"
-                        >
-                        <input
-                            type="text"
-                            placeholder="Relation description" 
-                            v-model="newRelation.description"
-                            class="fira-sans-light w-full border rounded text-sm p-1"
-                        >
-                        <input type="submit" style="display: none" />
-                    </form>
-                    <div class="mt-4 pl-2">
-                        <div class="fira-sans-light my-1 flex flex-row space-x-2 border-b" v-for="relation in relationElements">
-                            <div class="w-1/4">
-                                <label>{{ relation.element.symbol }}</label>
-                            </div> 
-                            <div class="w-2/4">
-                                <label>{{ relation.element.description }}</label>
-                            </div>
-                            <div class="w-1/4 flex flex-row justify-end">
-                                <button
-                                    @click="deleteRelation(relation)" 
-                                    class="text-xs text-red-500 px-2 py-1 firsa-sans-light"
-                                >
-                                    Delete Relation
-                                </button>
+                                        <option
+                                            v-for="relation in relationElements"
+                                            :value="relation.element.symbol" 
+                                            :key="relation.key"
+                                            class="font-secondary"
+                                        >
+                                            {{ relation.element.description }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="w-1/4 flex flex-row justify-end">
+                                    <button
+                                        @click="deleteActivity(activity)" 
+                                        class="text-xs text-red-500 px-2 py-1 firsa-sans-light"
+                                    >
+                                        Delete Primary Keys
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div>
-                    <h2 class="fira-sans-medium text-base">Manage Reasoning</h2>
-                    <form 
-                        class="flex flex-row space-x-2"
-                        @submit.prevent="createReasonElement"
-                    >
-                        <input
-                            type="text"
-                            placeholder="Reasoning symbol/id" 
-                            v-model="newReason.symbol"
-                            class="fira-sans-light w-full border rounded text-sm p-1"
+                    <div>
+                        <h2 class="fira-sans-medium text-base">Manage Relations</h2>
+                        <p class="firsa-sans-light py-1 text-xs">
+                            This is where you specify your closeness ratings.
+                        </p>
+                        <button
+                            class="bg-gray-300 border text-xs px-2 py-1 mb-3 rounded-lg firsa-sans-light shadow"
+                            @click="createRelationsForARC"
                         >
-                        <input
-                            type="text"
-                            placeholder="Reasoning description" 
-                            v-model="newReason.description"
-                            class="fira-sans-light w-full border rounded text-sm p-1"
+                            use Activity Relationship Chart Closeness Ratings
+                        </button>
+
+                        <form 
+                            class="flex flex-row space-x-2"
+                            @submit.prevent="createRelationElement"
                         >
-                        <input type="submit" style="display: none" />
-                    </form>
-                    <div class="mt-4 pl-2">
-                        <div class="fira-sans-light my-1 flex flex-row space-x-2 border-b"v-for="reason in reasonElements">
-                            <div class="w-1/4">
-                                <label>{{ reason.element.symbol }}</label>
-                            </div> 
-                            <div class="w-2/4">
-                                <label>{{ reason.element.description }}</label>
-                            </div>
-                            <div class="w-1/4 flex flex-row justify-end">
-                                <button
-                                    @click="deleteReason(reason)" 
-                                    class="text-xs text-red-500 px-2 py-1 firsa-sans-light"
-                                >
-                                    Delete Reason
-                                </button>
+                            <input
+                                type="text"
+                                placeholder="Relation symbol" 
+                                v-model="newRelation.symbol"
+                                class="fira-sans-light w-full border rounded text-sm p-1"
+                            >
+                            <input
+                                type="text"
+                                placeholder="Relation description" 
+                                v-model="newRelation.description"
+                                class="fira-sans-light w-full border rounded text-sm p-1"
+                            >
+                            <input type="submit" style="display: none" />
+                        </form>
+                        <div class="mt-4 pl-2">
+                            <div class="fira-sans-light my-1 flex flex-row space-x-2 border-b" v-for="relation in relationElements">
+                                <div class="w-1/4">
+                                    <label>{{ relation.element.symbol }}</label>
+                                </div> 
+                                <div class="w-2/4">
+                                    <label>{{ relation.element.description }}</label>
+                                </div>
+                                <div class="w-1/4 flex flex-row justify-end">
+                                    <button
+                                        @click="deleteRelation(relation)" 
+                                        class="text-xs text-red-500 px-2 py-1 firsa-sans-light"
+                                    >
+                                        Delete Relation
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div>
-                    <button 
-                        @click="openModal()"
-                        class="bg-green-600 text-white w-full fira-sans-medium rounded-lg py-2"
-                    >
-                        Generate ARC Diagram
-                    </button>
+                    <div>
+                        <h2 class="fira-sans-medium text-base">Manage Reasoning</h2>
+                        <form 
+                            class="flex flex-row space-x-2"
+                            @submit.prevent="createReasonElement"
+                        >
+                            <input
+                                type="text"
+                                placeholder="Reasoning symbol/id" 
+                                v-model="newReason.symbol"
+                                class="fira-sans-light w-full border rounded text-sm p-1"
+                            >
+                            <input
+                                type="text"
+                                placeholder="Reasoning description" 
+                                v-model="newReason.description"
+                                class="fira-sans-light w-full border rounded text-sm p-1"
+                            >
+                            <input type="submit" style="display: none" />
+                        </form>
+                        <div class="mt-4 pl-2">
+                            <div class="fira-sans-light my-1 flex flex-row space-x-2 border-b"v-for="reason in reasonElements">
+                                <div class="w-1/4">
+                                    <label>{{ reason.element.symbol }}</label>
+                                </div> 
+                                <div class="w-2/4">
+                                    <label>{{ reason.element.description }}</label>
+                                </div>
+                                <div class="w-1/4 flex flex-row justify-end">
+                                    <button
+                                        @click="deleteReason(reason)" 
+                                        class="text-xs text-red-500 px-2 py-1 firsa-sans-light"
+                                    >
+                                        Delete Reason
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button 
+                            @click="openModal()"
+                            class="bg-green-600 text-white w-full fira-sans-medium rounded-lg py-2"
+                        >
+                            Generate ARC Diagram
+                        </button>
+                    </div>
                 </div>
             </div>
         </main>
     </body>
 
     <script>
-        localStorage.clear();
-        var gun = new Gun();
-        
-        // var gun = new Gun(['https://gun-manhattan.herokuapp.com/gun']);
-        var db = gun.get('wira-pratama-gunfps-dep2');
+        // localStorage.clear();
 
+        var gun = new Gun(['https://gun-manhattan.herokuapp.com/gun']);
+        // var gun = new Gun();
+        var db;
+        
         const { createApp } = Vue;
         createApp({
             data() {
                 return {
+                    gunfpId: false,
                     elements: [],
                     activities: [],
                     relations: [],
@@ -956,13 +985,129 @@
                     link.download = "svgdiagram_arc.svg";
                     link.href = this.svgDownloadURL;
                     link.click();
+                },
+                generateAndStoreNewGunfpId: function () {
+                    let previousGunFPID = localStorage.getItem('gunfpId');
+                },
+                connectAndListenToGunfp: function () {
+                    db.map().on(this.elementUpdated.bind(this));
+                },
+                disconnectFromGunfp: function () {
+                    db.map().off();
+                },
+                connectAndListenToNewGunfp: function () {
+                    /*
+                        Check if user inputted gunfp id is not empty
+                    */
+                    if (this.gunfpId === '') {
+                        this.openNotification('gunfpId cannot be empty');
+                        return;
+                    };
+
+                    /*
+                        Check if user inputted gunfp id follows the format
+                    */
+                    if (!/^(gunfp-)/.test(this.gunfpId)) {
+                        this.openNotification('this is not a valid gunfpid');
+                        return;
+                    };
+
+                    /*
+                        Stop listening to changes from previous nodes
+                    */
+                    this.disconnectFromGunfp();
+
+                    /*
+                        Listen to new db
+                    */
+                    db = gun.get('wira-pratama-gunfp').get(this.gunfpId);
+
+                    /*
+                        Clear previous data
+                    */
+                    this.elements = []
+                    this.activities = []
+                    this.relations = []
+                    this.reasons = []
+                    this.newMetadata = {
+                        title: '',
+                        subtitle: '',
+                        author: '',
+                        pad_x: 40,
+                        pad_y: 20,
+                        height: 20,
+                        length: 120,
+                        type: 'metadata'
+                    }
+                    this.newActivity = {
+                        pActivity: '',
+                        sActivity: '',
+                        relation: '',
+                        reason: '',
+                        type: 'activity'
+                    }
+                    this.newRelation = {
+                        symbol: '',
+                        description: '',
+                        type: 'relation'
+                    }
+                    this.newReason = {
+                        symbol: '',
+                        description: '',
+                        type: 'reason'
+                    }
+                    this.svgDownloadURL = false
+                    this.notificationMessage = false
+                    
+                    /*
+                        Connect, store, and notify upon connecting to a new node
+                    */
+                    this.connectAndListenToGunfp();
+                    localStorage.setItem('gunfpId', this.gunfpId);
+                    this.openNotification('successfully connected to the workspace');
                 }
             },
             mounted: function () {
                 /*
-                    Subscribe on the data
+                    Checks whether there is a previous gunfpId stored and connect to that, if not then crate a new one
                 */
-                db.map().on(this.elementUpdated.bind(this));
+                let previousGunFPID = localStorage.getItem('gunfpId');
+                if (previousGunFPID) {
+                    /*
+                        Sets local gunfpId
+                    */
+                    this.gunfpId = previousGunFPID;
+
+                    /*
+                        Connect to db
+                    */
+                    db = gun.get('wira-pratama-gunfp').get(this.gunfpId);
+
+                    /*
+                        Listen to changes on db
+                    */
+                    this.connectAndListenToGunfp();
+                } else {
+                    /*
+                        Sets local gunfpId
+                    */
+                    this.gunfpId = this.generateGunfpId('gunfp');
+
+                    /*
+                        Stores new gunfpid to localStorage
+                    */
+                    localStorage.setItem('gunfpId', this.gunfpId);
+
+                    /*
+                        Connect to db
+                    */
+                    db = gun.get('wira-pratama-gunfp').get(this.gunfpId);
+
+                    /*
+                        Listen to changes on db
+                    */
+                    this.connectAndListenToGunfp();
+                }
             }
         }).mount("#app");
     </script>
