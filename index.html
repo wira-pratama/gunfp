@@ -6,9 +6,7 @@
         <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/gun/gun.js" type="text/javascript" charset="utf-8"></script>
-        <!-- <script src=" https://cdn.jsdelivr.net/npm/paper@0.12.18/dist/paper-full.min.js "></script> -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.15/paper-core.min.js"></script>
-
 
         <link href="https://fonts.googleapis.com/css2?family=Bungee+Tint&family=Fira+Sans:wght@300;500&display=swap" rel="stylesheet">
 
@@ -324,9 +322,8 @@
         // localStorage.clear();
         // var gun = new Gun();
 
-        var gun = new Gun(['http://103.127.137.42:8080/']);
+        var gun = new Gun(['http://103.127.137.42']);
         var db;
-        console.log('connected to http://103.127.137.42:8080/')
         
         const { createApp } = Vue;
         createApp({
@@ -1069,6 +1066,8 @@
                 }
             },
             mounted: function () {
+                console.log('hello good people')
+                
                 /*
                     Checks whether there is a previous gunfpId stored and connect to that, if not then crate a new one
                 */
