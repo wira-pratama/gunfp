@@ -322,7 +322,7 @@
         // localStorage.clear();
         // var gun = new Gun();
 
-        var gun = new Gun(['http://103.127.137.42']);
+        var gun = new Gun(['https://gundb-relay-mlccl.ondigitalocean.app/gun']);
         var db;
         
         const { createApp } = Vue;
@@ -1067,7 +1067,7 @@
             },
             mounted: function () {
                 console.log('hello good people')
-                
+
                 /*
                     Checks whether there is a previous gunfpId stored and connect to that, if not then crate a new one
                 */
