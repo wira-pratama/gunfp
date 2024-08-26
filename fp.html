@@ -10,6 +10,8 @@
 
         <link href="https://fonts.googleapis.com/css2?family=Bungee+Tint&family=Fira+Sans:wght@300;500&display=swap" rel="stylesheet">
 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+
         <style>
             body,
             html {
@@ -76,7 +78,7 @@
             <div id="notification">
                 <div 
                     v-if="notificationMessage" 
-                    class="p-2 rounded-lg bg-yellow-300 shadow text-white bungee"
+                    class="p-2 rounded-lg bg-yellow-300 w-[60vw] md:w-full text-xs md:text-base shadow text-white bungee"
                 >
                     {{ notificationMessage }}
                 </div>
@@ -85,7 +87,7 @@
             <!-- Overlay -->
             <div id="overlay">
                 <div id="content">
-                    <div class="bg-white h-fit w-[40vw] p-4 rounded-lg flex flex-col space-y-4">
+                    <div class="bg-white h-fit w-full md:w-[40vw] p-4 rounded-lg flex flex-col space-y-4">
                         <div>
                             <h2 class="fira-sans-medium text-base">Generated ARC Diagram</h2>
                         </div>
@@ -116,14 +118,13 @@
             </div>
 
             <!-- Main App -->
-            <div class="px-20 py-12 flex flex-col space-y-10">
+            <div class="p-4 md:px-20 md:py-12 flex flex-col space-y-10">
                 <div>
-                    <h1 class="text-3xl"> 
+                    <h1 class="text-2xl md:text-3xl"> 
                         <span class="bungee">wira-pratama/GUNFP:</span>
                         <span class="fira-sans-light pl-2">Activity Relationship Chart Made Easy</span>
-                        
                     </h1>
-                    <p class="firsa-sans-light pt-2 text-sm">
+                    <p class="firsa-sans-light pt-2 text-xs md:text-sm">
                         GUNFP is a decentralized single file app created to aid in creating facility planning diagrams collaboratively 
                     </p>
                     <p class="pt-1 text-xs firsa-sans-light text-gray-500">
@@ -145,7 +146,7 @@
                                 type="text"
                                 placeholder="Activity name" 
                                 v-model="gunfpId"
-                                class="fira-sans-light w-full border rounded text-sm p-1"
+                                class="fira-sans-light w-full border rounded text-xs sm:text-sm p-1"
                             >
                             <button
                                 class="bg-green-100 text-xs px-2 py-1 rounded-lg firsa-sans-light shadow"
@@ -172,7 +173,7 @@
                                 placeholder="Activity name" 
                                 v-model="newActivity.pActivity"
                                 @keyup.enter="createActivityElement"
-                                class="fira-sans-light w-full border rounded text-sm p-1"
+                                class="fira-sans-light w-full border rounded text-xs sm:text-sm p-1"
                             >
                             <div v-if="activities.length === 1">
                                 <label class="text-xs fira-sans-light text-gray-500">You need minimum of two activity, the one you just input was: "{{ activities[0] }}"</label>
@@ -180,7 +181,7 @@
                         </div>
 
                         <div class="mt-4 pl-2">
-                            <div class="fira-sans-light my-1 flex flex-row space-x-2 border-b" v-for="activity in activityElements">
+                            <div class="text-xs md:text-base fira-sans-light my-1 flex flex-row space-x-2 border-b" v-for="activity in activityElements">
                                 <div class="w-1/4">
                                     <label>{{ activity.element.pActivity }}</label>
                                 </div>
@@ -207,8 +208,9 @@
                                     <button
                                         @click="deleteActivity(activity)" 
                                         class="text-xs text-red-500 px-2 py-1 firsa-sans-light"
-                                    >
-                                        Delete Primary Keys
+                                    >        
+                                        <label class="hidden md:block">Delete Primary Keys</label>
+                                        <label class="md:hidden block">Delete</label>
                                     </button>
                                 </div>
                             </div>
@@ -224,7 +226,8 @@
                             class="bg-gray-300 border text-xs px-2 py-1 mb-3 rounded-lg firsa-sans-light shadow"
                             @click="createRelationsForARC"
                         >
-                            use Activity Relationship Chart Closeness Ratings
+                            <label class="hidden md:block text-xs">use Activity Relationship Chart Closeness Ratings</label>
+                            <label class="md:hidden block text-xs">use Template</label>
                         </button>
 
                         <form 
@@ -235,18 +238,18 @@
                                 type="text"
                                 placeholder="Relation symbol" 
                                 v-model="newRelation.symbol"
-                                class="fira-sans-light w-full border rounded text-sm p-1"
+                                class="fira-sans-light w-full border rounded text-xs sm:text-sm p-1"
                             >
                             <input
                                 type="text"
                                 placeholder="Relation description" 
                                 v-model="newRelation.description"
-                                class="fira-sans-light w-full border rounded text-sm p-1"
+                                class="fira-sans-light w-full border rounded text-xs sm:text-sm p-1"
                             >
                             <input type="submit" style="display: none" />
                         </form>
                         <div class="mt-4 pl-2">
-                            <div class="fira-sans-light my-1 flex flex-row space-x-2 border-b" v-for="relation in relationElements">
+                            <div class="text-xs md:text-base fira-sans-light my-1 flex flex-row space-x-2 border-b" v-for="relation in relationElements">
                                 <div class="w-1/4">
                                     <label>{{ relation.element.symbol }}</label>
                                 </div> 
@@ -267,6 +270,9 @@
 
                     <div>
                         <h2 class="fira-sans-medium text-base">Manage Reasoning</h2>
+                        <p class="firsa-sans-light py-1 text-xs">
+                            This is where you specify your reasoning on setting a relation.
+                        </p>
                         <form 
                             class="flex flex-row space-x-2"
                             @submit.prevent="createReasonElement"
@@ -275,18 +281,18 @@
                                 type="text"
                                 placeholder="Reasoning symbol/id" 
                                 v-model="newReason.symbol"
-                                class="fira-sans-light w-full border rounded text-sm p-1"
+                                class="fira-sans-light w-full border rounded text-xs sm:text-sm p-1"
                             >
                             <input
                                 type="text"
                                 placeholder="Reasoning description" 
                                 v-model="newReason.description"
-                                class="fira-sans-light w-full border rounded text-sm p-1"
+                                class="fira-sans-light w-full border rounded text-xs sm:text-sm p-1"
                             >
                             <input type="submit" style="display: none" />
                         </form>
                         <div class="mt-4 pl-2">
-                            <div class="fira-sans-light my-1 flex flex-row space-x-2 border-b"v-for="reason in reasonElements">
+                            <div class="text-xs md:text-base fira-sans-light my-1 flex flex-row space-x-2 border-b"v-for="reason in reasonElements">
                                 <div class="w-1/4">
                                     <label>{{ reason.element.symbol }}</label>
                                 </div> 
@@ -983,9 +989,6 @@
                     link.download = "svgdiagram_arc.svg";
                     link.href = this.svgDownloadURL;
                     link.click();
-                },
-                generateAndStoreNewGunfpId: function () {
-                    let previousGunFPID = localStorage.getItem('gunfpId');
                 },
                 connectAndListenToGunfp: function () {
                     db.map().on(this.elementUpdated.bind(this));
