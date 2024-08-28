@@ -119,6 +119,7 @@
 
             <!-- Main App -->
             <div class="p-4 md:px-20 md:py-12 flex flex-col space-y-10">
+                {{activities}}
                 <div>
                     <h1 class="text-2xl md:text-3xl"> 
                         <span class="bungee">wira-pratama/gunie/arc:</span>
@@ -325,10 +326,10 @@
     </body>
 
     <script>
-        // localStorage.clear();
-        // var gun = new Gun();
+        localStorage.clear();
+        var gun = new Gun();
 
-        var gun = new Gun(['https://wira-pratama.tech/gun']);
+        // var gun = new Gun(['https://wira-pratama.tech/gun']);
         var db;
         
         const { createApp } = Vue;
@@ -444,11 +445,24 @@
                         If element does exist, check the type of the element and whether the item already indexed, if not push to local
                     */
                     if (/^(activity-)/.test(nodeKey)) {
-                        var existingActivityIndex = this.activities.findIndex(function(activity) {
+                        /*
+                            Checks whether pActivity already exist in acitivities index, push to index if no
+                        */
+                        var existingPActivityIndex = this.activities.findIndex(function(activity) {
                             return activity === elementToStore.element.pActivity
                         });
-                        if (existingActivityIndex === -1) {
+                        if (existingPActivityIndex === -1) {
                             this.activities.push(elementToStore.element.pActivity);
+                        };
+
+                        /*
+                            Checks whether sActivity already exist in acitivities index, push to index if no
+                        */
+                        var existingSActivityIndex = this.activities.findIndex(function(activity) {
+                            return activity === elementToStore.element.sActivity
+                        });
+                        if (existingSActivityIndex === -1) {
+                            this.activities.push(elementToStore.element.sActivity);
                         };
                     };
                     if (/^(relation-)/.test(nodeKey)) {
